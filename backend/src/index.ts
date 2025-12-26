@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import authRoutes from './routes/authRoutes';
 import transactionRoutes from './routes/transactionRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/auth', authRoutes);
 app.use('/users', authRoutes); // Exposing /users/me via authRoutes (cleaner alias)
 app.use('/transactions', transactionRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // Basic Health Check
 app.get('/', (req, res) => {
