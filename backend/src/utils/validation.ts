@@ -11,6 +11,26 @@ export interface TransactionFormData {
 export const PAYMENT_METHODS = ['cash', 'upi', 'card', 'wallet', 'other'] as const;
 export const TRANSACTION_TYPES = ['expense', 'income'] as const;
 
+// Email validation
+export const validateEmail = (email: any): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return typeof email === 'string' && emailRegex.test(email);
+};
+
+// Password validation - minimum 8 chars, at least one uppercase, one lowercase, one number
+export const validatePassword = (password: any): boolean => {
+    if (typeof password !== 'string' || password.length < 8) {
+        return false;
+    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+};
+
+// Name validation - non-empty string, max 100 chars
+export const validateName = (name: any): boolean => {
+    return typeof name === 'string' && name.trim().length > 0 && name.length <= 100;
+};
+
 export const validateAmount = (amount: any): boolean => {
     const num = parseFloat(amount);
     return !isNaN(num) && num > 0;
