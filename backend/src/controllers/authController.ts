@@ -5,13 +5,30 @@ import { prisma } from '../index';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middlewares/authMiddleware';
 import { sendPasswordResetEmail, sendWelcomeEmail } from '../utils/email';
+import { validateEmail, validatePassword, validateName } from '../utils/validation';
 
 export const signup = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
 
     try {
+        // Input validation
         if (!name || !email || !password) {
             res.status(400).json({ error: 'Name, email, and password are required' });
+            return;
+        }
+
+        if (!validateName(name)) {
+            res.status(400).json({ error: 'Name must be a non-empty string (max 100 characters)' });
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            res.status(400).json({ error: 'Invalid email format' });
+            return;
+        }
+
+        if (!validatePassword(password)) {
+            res.status(400).json({ error: 'Password must be at least 8 characters with uppercase, lowercase, and number' });
             return;
         }
 
@@ -33,13 +50,19 @@ export const signup = async (req: Request, res: Response) => {
 
         const token = generateToken(user.id);
         
-        // Send welcome email
-        await sendWelcomeEmail(email, name);
+        // Send welcome email (fire and forget)
+        sendWelcomeEmail(email, name).catch(err => 
+            console.error('Failed to send welcome email:', err)
+        );
 
         res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, currency: user.currency } });
     } catch (error) {
         console.error('Signup error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        if (error instanceof Error && error.message.includes('Unique constraint')) {
+            res.status(400).json({ error: 'Email already in use' });
+        } else {
+            res.status(500).json({ error: 'Internal server error' });
+        }
     }
 };
 
@@ -49,6 +72,11 @@ export const login = async (req: Request, res: Response) => {
     try {
         if (!email || !password) {
             res.status(400).json({ error: 'Email and password are required' });
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            res.status(400).json({ error: 'Invalid email format' });
             return;
         }
 
